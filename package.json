@@ -27,6 +27,7 @@
     "@nestjs/passport": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/typeorm": "^9.0.1",
+    "expo-file-system": "^15.1.1",
     "msql": "^1.0.3",
     "mssql": "^7.3.5",
     "mysql2": "^2.3.3",

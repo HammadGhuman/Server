@@ -1,9 +1,9 @@
-import { Body, Controller, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { diskStorage } from 'multer';
-import path from 'path';
+import {resolve} from 'node:path'
 import { JwtAuthGuard } from 'src/users/jwt.auth.guard';
 import { CreateMissingDto } from './dto/createMisingDto';
 
@@ -20,8 +20,9 @@ export class UploadsController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file',{
     storage : diskStorage({
-      destination : "./missingChildren",
+      destination : "./pendingRequests",
       filename : (req,file,cb)=>{
+        console.log('file =========== ',file);
         const name = file.originalname.split(".")[0];
         const fileExtension = file.originalname.split(".")[1];
         let date = new Date();
@@ -35,14 +36,15 @@ export class UploadsController {
     })
   }))
   reportMissingChild(@UploadedFile() file:Express.Multer.File,@Body() createMissingDto:CreateMissingDto,@Req() req){
-    console.log(req.user)
-    createMissingDto.imageOfChild = file.destination;
-    console.log(file);
+    console.log(req.body)
+    console.log(req.file);
+    createMissingDto.imageOfChild = file.path;
     return this.uploadsService.reportMissingChild(createMissingDto);
   }
 
 
   @Post('/found')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file',{
     storage : diskStorage({
       destination : "./foundChildren",
@@ -60,10 +62,43 @@ export class UploadsController {
     })
   }))
   reportFoundChild(@UploadedFile() file:Express.Multer.File,@Body() createMissingDto:CreateMissingDto){
-    createMissingDto.imageOfChild = file.destination;
+    createMissingDto.imageOfChild = file.path;
     console.log(file);
     return this.uploadsService.reportFoundChild(createMissingDto);
   }
 
 
+  @Delete()
+  rejectRequest(@Body() body:{id:string}){
+    console.log(body.id);
+    return this.uploadsService.deleteRequest(body.id)
+  }
+
+  @Patch()
+  aproveRequest(@Body() body:{id:string}){
+    console.log(body.id);
+    return this.uploadsService.AproveRequest(body.id);
+  }
+
+  @Patch('/foundRequest')
+  foundRequest(@Body() body:{id:string}){
+    console.log(body.id);
+    return this.uploadsService.foundRequest(body.id);
+  }
+
+
+  @Get('/missing')
+  getMissingRequest(){
+    return this.uploadsService.getMissingRequest();
+  }
+
+  @Get('/found')
+  getFoundRequest(){
+    return this.uploadsService.getFoundRequest();
+  }
+
+  @Get('/pending')
+  getPendingRequest(){
+    return this.uploadsService.getPendingRequest();
+  }
 }
